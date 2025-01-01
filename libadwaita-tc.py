@@ -24,6 +24,9 @@ if __name__ == "__main__":
             sp.run(["rm", f'{home_dir}{config_dir}/gtk-4.0/assets'])
             sp.run(["rm", f'{home_dir}{config_dir}/assets'])
         else:
+            if not os.path.exists(f'{home_dir}{themes_dir}'):
+                os.makedirs(f'{home_dir}{themes_dir}')
+              
             all_themes = str(sp.run(["ls", f'{home_dir}{themes_dir}/'], stdout=sp.PIPE).stdout.decode("UTF-8")).split()
             print("Select theme: ")
             for i, theme in enumerate(all_themes):
