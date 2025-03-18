@@ -1,4 +1,5 @@
 #!/bin/python3
+
 import os
 import argparse
 
@@ -10,7 +11,6 @@ THEME_LOCATIONS = {
 }
 
 def remove_if_exists(path):
-    """Remove a symlink or directory if it exists."""
     if os.path.islink(path):
         print(f"Removing: {path}")
         os.remove(path)
@@ -20,12 +20,10 @@ def remove_if_exists(path):
         shutil.rmtree(path)
 
 def remove_current_theme(config_dir):
-    """Remove all symlinks for the current theme."""
     for item in THEME_ITEMS:
         remove_if_exists(os.path.join(config_dir, item))
 
 def set_new_theme(theme_dir, config_dir):
-    """Create symlinks for the new theme."""
     for item in THEME_ITEMS:
         source = os.path.join(theme_dir, item)
         target = os.path.join(config_dir, item)
@@ -46,7 +44,6 @@ def set_new_theme(theme_dir, config_dir):
             print(f"Error linking {target}: {e}")
 
 def select_theme_location():
-    """Present menu to select theme location."""
     print("\nSelect theme folder:")
     for i, (name, path) in enumerate(THEME_LOCATIONS.items()):
         print(f"{i}. {path} ({name})")
@@ -58,7 +55,6 @@ def select_theme_location():
         print("Invalid choice, try again.")
 
 def is_theme_directory(dir_path):
-    """Check if a directory is a theme directory (not .git or other system dirs)."""
     if os.path.basename(dir_path).startswith('.'):
         return False
     
@@ -69,7 +65,6 @@ def is_theme_directory(dir_path):
     return False
 
 def select_theme(themes_dir):
-    """Present menu to select a theme from the themes directory."""
     try:
         all_themes = sorted([d for d in os.listdir(themes_dir) 
                      if os.path.isdir(os.path.join(themes_dir, d)) and 
@@ -96,7 +91,6 @@ def select_theme(themes_dir):
         return None
 
 def main():
-    """Main function."""
     parser = argparse.ArgumentParser(description="Libadwaita Theme Changer")
     parser.add_argument("--reset", action="store_true", help="Reset theme to default")
     parser.add_argument("--list", action="store_true", help="List available themes")
