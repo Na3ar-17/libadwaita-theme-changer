@@ -1,22 +1,23 @@
 #!/bin/python3
-# filepath: /home/nazar/Theme changer/libadwaita-tc.py
-import sys
 import os
 import argparse
 
 THEME_ITEMS = ["gtk-4.0/gtk.css", "gtk-4.0/gtk-dark.css", "gtk-4.0/assets", "assets"]
 
-# Theme locations
 THEME_LOCATIONS = {
     "local": ".local/share/themes",
     "home": ".themes"
 }
 
 def remove_if_exists(path):
-    """Remove a symlink if it exists."""
+    """Remove a symlink or directory if it exists."""
     if os.path.islink(path):
         print(f"Removing: {path}")
         os.remove(path)
+    elif os.path.isdir(path):
+        print(f"Removing directory: {path}")
+        import shutil
+        shutil.rmtree(path)
 
 def remove_current_theme(config_dir):
     """Remove all symlinks for the current theme."""
@@ -32,12 +33,17 @@ def set_new_theme(theme_dir, config_dir):
         if not os.path.exists(source):
             print(f"Warning: {source} not found, skipping...")
             continue
+        
+        os.makedirs(os.path.dirname(target), exist_ok=True)
+        
+        if os.path.exists(target) or os.path.islink(target):
+            remove_if_exists(target)
             
         try:
             os.symlink(source, target)
             print(f"Linked: {target}")
-        except FileExistsError:
-            print(f"Error: {target} already exists")
+        except Exception as e:
+            print(f"Error linking {target}: {e}")
 
 def select_theme_location():
     """Present menu to select theme location."""
@@ -51,11 +57,23 @@ def select_theme_location():
             return list(THEME_LOCATIONS.values())[int(choice)]
         print("Invalid choice, try again.")
 
+def is_theme_directory(dir_path):
+    """Check if a directory is a theme directory (not .git or other system dirs)."""
+    if os.path.basename(dir_path).startswith('.'):
+        return False
+    
+    for subdir in ['gtk-4.0', 'assets']:
+        if os.path.isdir(os.path.join(dir_path, subdir)):
+            return True
+    
+    return False
+
 def select_theme(themes_dir):
     """Present menu to select a theme from the themes directory."""
     try:
         all_themes = sorted([d for d in os.listdir(themes_dir) 
-                     if os.path.isdir(os.path.join(themes_dir, d))])
+                     if os.path.isdir(os.path.join(themes_dir, d)) and 
+                     is_theme_directory(os.path.join(themes_dir, d))])
         
         if not all_themes:
             print(f"No themes found in {themes_dir}")
@@ -100,7 +118,8 @@ def main():
         print(f"\nThemes in {themes_dir}:")
         try:
             for theme in sorted(os.listdir(themes_dir)):
-                if os.path.isdir(os.path.join(themes_dir, theme)):
+                theme_path = os.path.join(themes_dir, theme)
+                if os.path.isdir(theme_path) and is_theme_directory(theme_path):
                     print(f"- {theme}")
         except (FileNotFoundError, PermissionError) as e:
             print(f"Error: {e}")
